@@ -1,28 +1,24 @@
-const db = require("../firebaseConfig");
-const User = require("../models/userModel");
+const db = require("../database");
 
-exports.createUser = async (req, res) => {
-  try {
-    const { nom, prenom, email, plateformes } = req.body;
-    const newUserRef = await db.collection("Utilisateurs").add({
-      nom,
-      prenom,
-      email,
-      date_inscription: new Date(),
-      plateformes,
-    });
-    res.status(201).json({ id: newUserRef.id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+exports.createUser = (req, res) => {
+  const { nom, prenom, email, mot_de_passe, plateformes } = req.body;
+  const query = "INSERT INTO Utilisateurs (nom, prenom, email, mot_de_passe, plateformes_liees) VALUES (?, ?, ?, ?, ?)";
+  db.query(query, [nom, prenom, email, mot_de_passe, plateformes], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.status(201).json({ id: result.insertId });
+  });
 };
 
-exports.getUsers = async (req, res) => {
-  try {
-    const snapshot = await db.collection("Utilisateurs").get();
-    const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+exports.getUsers = (req, res) => {
+  const query = "SELECT * FROM Utilisateurs";
+  db.query(query, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(results);
+  });
 };
